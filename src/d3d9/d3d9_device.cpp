@@ -1235,10 +1235,10 @@ namespace dxvk {
     D3D9Surface* src = static_cast<D3D9Surface*>(pSourceSurface);
 
     if (unlikely(src == nullptr || dst == nullptr))
-      return D3DERR_INVALIDCALL;
+      return D3DERR_NOTAVAILABLE;
 
     if (unlikely(src == dst))
-      return D3DERR_INVALIDCALL;
+      return D3DERR_NOTAVAILABLE;
 
     bool fastPath = true;
 
@@ -1247,13 +1247,13 @@ namespace dxvk {
 
     if (unlikely(dstTextureInfo->Desc()->Pool != D3DPOOL_DEFAULT ||
                  srcTextureInfo->Desc()->Pool != D3DPOOL_DEFAULT))
-      return D3DERR_INVALIDCALL;
+      return D3DERR_NOTAVAILABLE;
 
     Rc<DxvkImage> dstImage = dstTextureInfo->GetImage();
     Rc<DxvkImage> srcImage = srcTextureInfo->GetImage();
 
     if (dstImage == nullptr || srcImage == nullptr)
-        return D3DERR_INVALIDCALL;
+        return D3DERR_NOTAVAILABLE;
 
     const DxvkFormatInfo* dstFormatInfo = lookupFormatInfo(dstImage->info().format);
     const DxvkFormatInfo* srcFormatInfo = lookupFormatInfo(srcImage->info().format);
@@ -1262,7 +1262,7 @@ namespace dxvk {
     const VkImageSubresource srcSubresource = srcTextureInfo->GetSubresourceFromIndex(srcFormatInfo->aspectMask, src->GetSubresource());
 
     if (unlikely(Filter != D3DTEXF_NONE && Filter != D3DTEXF_LINEAR && Filter != D3DTEXF_POINT))
-      return D3DERR_INVALIDCALL;
+      return D3DERR_NOTAVAILABLE;
 
     VkExtent3D srcExtent = srcImage->mipLevelExtent(srcSubresource.mipLevel);
     VkExtent3D dstExtent = dstImage->mipLevelExtent(dstSubresource.mipLevel);
@@ -1330,10 +1330,10 @@ namespace dxvk {
       : VkOffset3D{ int32_t(srcExtent.width),    int32_t(srcExtent.height),    1 };
 
     if (unlikely(IsBlitRegionInvalid(blitInfo.srcOffsets, srcExtent)))
-      return D3DERR_INVALIDCALL;
+      return D3DERR_NOTAVAILABLE;
 
     if (unlikely(IsBlitRegionInvalid(blitInfo.dstOffsets, dstExtent)))
-      return D3DERR_INVALIDCALL;
+      return D3DERR_NOTAVAILABLE;
 
     VkExtent3D srcCopyExtent =
     { uint32_t(blitInfo.srcOffsets[1].x - blitInfo.srcOffsets[0].x),
@@ -1349,16 +1349,16 @@ namespace dxvk {
     bool dstIsDS = IsDepthStencilFormat(dstFormat);
     if (unlikely(srcIsDS || dstIsDS)) {
       if (unlikely(!srcIsDS || !dstIsDS))
-        return D3DERR_INVALIDCALL;
+        return D3DERR_NOTAVAILABLE;
 
       if (unlikely(srcTextureInfo->Desc()->Discard || dstTextureInfo->Desc()->Discard))
-        return D3DERR_INVALIDCALL;
+        return D3DERR_NOTAVAILABLE;
 
       if (unlikely(srcCopyExtent.width != srcExtent.width || srcCopyExtent.height != srcExtent.height))
-        return D3DERR_INVALIDCALL;
+        return D3DERR_NOTAVAILABLE;
 
       if (unlikely(m_inScene))
-        return D3DERR_INVALIDCALL;
+        return D3DERR_NOTAVAILABLE;
     }
 
     // Copies would only work if the extents match. (ie. no stretching)
@@ -1368,16 +1368,16 @@ namespace dxvk {
     bool dstIsSurface = dstTextureInfo->GetType() == D3DRTYPE_SURFACE;
     if (stretch) {
       if (unlikely(pSourceSurface == pDestSurface))
-        return D3DERR_INVALIDCALL;
+        return D3DERR_NOTAVAILABLE;
 
       if (unlikely(dstIsDS))
-        return D3DERR_INVALIDCALL;
+        return D3DERR_NOTAVAILABLE;
 
       // The docs say that stretching is only allowed if the destination is either a render target surface or a render target texture.
       // However in practice, using an offscreen plain surface in D3DPOOL_DEFAULT as the destination works fine.
       // Using a texture without USAGE_RENDERTARGET as destination however does not.
       if (unlikely(!dstIsSurface && !dstHasAttachmentUsage))
-        return D3DERR_INVALIDCALL;
+        return D3DERR_NOTAVAILABLE;
     } else {
       bool srcIsSurface = srcTextureInfo->GetType() == D3DRTYPE_SURFACE;
       bool srcHasAttachmentUsage = (srcTextureInfo->Desc()->Usage & (D3DUSAGE_RENDERTARGET | D3DUSAGE_DEPTHSTENCIL)) != 0;
@@ -1395,7 +1395,7 @@ namespace dxvk {
       // - both destination and source are offscreen plain surfaces.
       // The only way to get a surface with resource type D3DRTYPE_SURFACE without USAGE_RT or USAGE_DS is CreateOffscreenPlainSurface.
       if (unlikely((!dstHasAttachmentUsage && (!dstIsSurface || !srcIsSurface || srcHasAttachmentUsage)) && !m_isD3D8Compatible && !isCopy))
-        return D3DERR_INVALIDCALL;
+        return D3DERR_NOTAVAILABLE;
     }
 
     fastPath &= !stretch;
@@ -1403,7 +1403,7 @@ namespace dxvk {
     if (!fastPath || needsResolve) {
       // Compressed destination formats are forbidden for blits.
       if (dstFormatInfo->flags.test(DxvkFormatFlag::BlockCompressed))
-        return D3DERR_INVALIDCALL;
+        return D3DERR_NOTAVAILABLE;
     }
 
     if (fastPath) {
