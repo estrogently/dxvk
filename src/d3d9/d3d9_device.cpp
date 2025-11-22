@@ -1262,7 +1262,7 @@ namespace dxvk {
     const VkImageSubresource srcSubresource = srcTextureInfo->GetSubresourceFromIndex(srcFormatInfo->aspectMask, src->GetSubresource());
 
     if (unlikely(Filter != D3DTEXF_NONE && Filter != D3DTEXF_LINEAR && Filter != D3DTEXF_POINT))
-      return D3DERR_NOTAVAILABLE;
+      return D3DERR_INVALIDCALL;
 
     VkExtent3D srcExtent = srcImage->mipLevelExtent(srcSubresource.mipLevel);
     VkExtent3D dstExtent = dstImage->mipLevelExtent(dstSubresource.mipLevel);
@@ -1330,10 +1330,10 @@ namespace dxvk {
       : VkOffset3D{ int32_t(srcExtent.width),    int32_t(srcExtent.height),    1 };
 
     if (unlikely(IsBlitRegionInvalid(blitInfo.srcOffsets, srcExtent)))
-      return D3DERR_NOTAVAILABLE;
+      return D3DERR_INVALIDCALL;
 
     if (unlikely(IsBlitRegionInvalid(blitInfo.dstOffsets, dstExtent)))
-      return D3DERR_NOTAVAILABLE;
+      return D3DERR_INVALIDCALL;
 
     VkExtent3D srcCopyExtent =
     { uint32_t(blitInfo.srcOffsets[1].x - blitInfo.srcOffsets[0].x),
@@ -1349,7 +1349,7 @@ namespace dxvk {
     bool dstIsDS = IsDepthStencilFormat(dstFormat);
     if (unlikely(srcIsDS || dstIsDS)) {
       if (unlikely(!srcIsDS || !dstIsDS))
-        return D3DERR_NOTAVAILABLE;
+        return D3DERR_INVALIDCALL;
 
       if (unlikely(srcTextureInfo->Desc()->Discard || dstTextureInfo->Desc()->Discard))
         return D3DERR_INVALIDCALL;
