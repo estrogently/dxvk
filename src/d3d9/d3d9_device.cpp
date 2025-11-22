@@ -1238,7 +1238,7 @@ namespace dxvk {
       return D3DERR_NOTAVAILABLE;
 
     if (unlikely(src == dst))
-      return D3DERR_NOTAVAILABLE;
+      return D3DERR_INVALIDCALL;
 
     bool fastPath = true;
 
