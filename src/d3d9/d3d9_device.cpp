@@ -1247,13 +1247,13 @@ namespace dxvk {
 
     if (unlikely(dstTextureInfo->Desc()->Pool != D3DPOOL_DEFAULT ||
                  srcTextureInfo->Desc()->Pool != D3DPOOL_DEFAULT))
-      return D3DERR_NOTAVAILABLE;
+      return D3DERR_INVALIDCALL;
 
     Rc<DxvkImage> dstImage = dstTextureInfo->GetImage();
     Rc<DxvkImage> srcImage = srcTextureInfo->GetImage();
 
     if (dstImage == nullptr || srcImage == nullptr)
-        return D3DERR_NOTAVAILABLE;
+        return D3DERR_INVALIDCALL;
 
     const DxvkFormatInfo* dstFormatInfo = lookupFormatInfo(dstImage->info().format);
     const DxvkFormatInfo* srcFormatInfo = lookupFormatInfo(srcImage->info().format);
