@@ -1235,9 +1235,6 @@ namespace dxvk {
     D3D9Surface* src = static_cast<D3D9Surface*>(pSourceSurface);
 
     if (unlikely(src == nullptr || dst == nullptr))
-      return D3DERR_NOTAVAILABLE;
-
-    if (unlikely(src == dst))
       return D3DERR_INVALIDCALL;
 
     bool fastPath = true;
